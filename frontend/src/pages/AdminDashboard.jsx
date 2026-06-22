@@ -51,6 +51,22 @@ export default function AdminDashboard() {
     });
   };
 
+  const uploadImage = (file) => {
+    if (!file) return;
+    if (file.size > 1500000) {
+      setError("Image size should be less than 1.5 MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((current) => ({ ...current, image: reader.result }));
+      setError("");
+    };
+    reader.onerror = () => setError("Unable to read image file");
+    reader.readAsDataURL(file);
+  };
+
   const deleteProduct = async (id) => {
     await api.delete(`/products/${id}`);
     await loadAdminData();
@@ -72,17 +88,32 @@ export default function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
         <form className="panel grid gap-3 p-5" onSubmit={submitProduct}>
           <h2 className="text-2xl font-black">{editingId ? "Edit product" : "Add product"}</h2>
-          {Object.keys(emptyProduct).map((key) => (
-            <input
-              key={key}
-              className="input"
-              placeholder={key}
-              type={["price", "stock"].includes(key) ? "number" : "text"}
-              value={form[key]}
-              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              required
-            />
-          ))}
+          {Object.keys(emptyProduct).map((key) =>
+            key === "image" ? (
+              <div key={key} className="grid gap-2">
+                <input
+                  className="input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => uploadImage(e.target.files?.[0])}
+                  required={!form.image}
+                />
+                {form.image && (
+                  <img src={form.image} alt="Product preview" className="h-32 w-full rounded-md object-cover" />
+                )}
+              </div>
+            ) : (
+              <input
+                key={key}
+                className="input"
+                placeholder={key}
+                type={["price", "stock"].includes(key) ? "number" : "text"}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                required
+              />
+            )
+          )}
           <button className="btn-primary"><Plus size={17} /> {editingId ? "Save product" : "Add product"}</button>
         </form>
         <div className="panel overflow-hidden">

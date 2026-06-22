@@ -25,7 +25,7 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(
   "/api",

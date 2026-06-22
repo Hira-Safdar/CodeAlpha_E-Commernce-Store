@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios.js";
+import QuantityControl from "../components/QuantityControl.jsx";
 import { useCart } from "../context/CartContext.jsx";
-import { formatCurrency } from "../utils/format.js";
+import { DELIVERY_FEE, formatCurrency } from "../utils/format.js";
 
 const initial = { fullName: "", phone: "", address: "", city: "", postalCode: "", country: "" };
 
@@ -10,7 +11,7 @@ export default function Checkout() {
   const [form, setForm] = useState(initial);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, updateItem, removeItem } = useCart();
   const navigate = useNavigate();
 
   const submit = async (e) => {
@@ -45,14 +46,23 @@ export default function Checkout() {
         <h2 className="text-xl font-black">Order summary</h2>
         <div className="mt-4 grid gap-3">
           {items.map((item) => (
-            <div key={item.product._id} className="flex justify-between gap-4 text-sm">
-              <span>{item.product.title} x {item.quantity}</span>
-              <span>{formatCurrency(item.product.price * item.quantity)}</span>
+            <div key={item.product._id} className="grid gap-2 border-b border-slate-200 pb-3 text-sm last:border-0 last:pb-0 dark:border-slate-800">
+              <div className="flex justify-between gap-4">
+                <span className="font-semibold">{item.product.title}</span>
+                <span>{formatCurrency(item.product.price * item.quantity)}</span>
+              </div>
+              <QuantityControl
+                value={item.quantity}
+                max={item.product.stock}
+                onDecrease={() => (item.quantity === 1 ? removeItem(item.product._id) : updateItem(item.product._id, item.quantity - 1))}
+                onIncrease={() => updateItem(item.product._id, item.quantity + 1)}
+                disabled={submitting}
+              />
             </div>
           ))}
         </div>
         <div className="mt-5 border-t border-slate-200 pt-4 text-lg font-black dark:border-slate-800 flex justify-between">
-          <span>Total</span><span>{formatCurrency(subtotal + (subtotal > 0 ? 12 : 0))}</span>
+          <span>Total</span><span>{formatCurrency(subtotal + (subtotal > 0 ? DELIVERY_FEE : 0))}</span>
         </div>
       </aside>
     </section>

@@ -2,14 +2,14 @@ import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios.js";
+import QuantityControl from "../components/QuantityControl.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { formatCurrency } from "../utils/format.js";
 
 export default function ProductDetails() {
   const { id } = useParams();
-  const { addItem } = useCart();
+  const { addItem, getItemQuantity, removeItem, updateItem } = useCart();
   const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -20,6 +20,7 @@ export default function ProductDetails() {
 
   if (error) return <section className="container-pad py-12"><p className="panel p-5 text-red-600">{error}</p></section>;
   if (!product) return <section className="container-pad py-12"><div className="h-96 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800" /></section>;
+  const quantity = getItemQuantity(product._id);
 
   return (
     <section className="container-pad grid gap-10 py-10 lg:grid-cols-2">
@@ -35,8 +36,16 @@ export default function ProductDetails() {
         <p className="mt-6 text-3xl font-black">{formatCurrency(product.price)}</p>
         <p className="mt-6 leading-8 text-slate-600 dark:text-slate-300">{product.description}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <input className="input max-w-24" min="1" max={product.stock} type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
-          <button className="btn-primary" disabled={!product.stock} onClick={() => addItem(product, quantity)}>Add to cart</button>
+          {quantity > 0 ? (
+            <QuantityControl
+              value={quantity}
+              max={product.stock}
+              onDecrease={() => (quantity === 1 ? removeItem(product._id) : updateItem(product._id, quantity - 1))}
+              onIncrease={() => updateItem(product._id, quantity + 1)}
+            />
+          ) : (
+            <button className="btn-primary" disabled={!product.stock} onClick={() => addItem(product, 1)}>Add to cart</button>
+          )}
         </div>
       </div>
     </section>

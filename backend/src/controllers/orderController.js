@@ -3,6 +3,8 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+const DELIVERY_FEE = 300;
+
 export const createOrder = asyncHandler(async (req, res) => {
   const { shippingAddress } = req.body;
   const cart = await Cart.findOne({ userId: req.user._id }).populate("products.product");
@@ -34,7 +36,7 @@ export const createOrder = asyncHandler(async (req, res) => {
   const order = await Order.create({
     userId: req.user._id,
     products: orderProducts,
-    totalAmount,
+    totalAmount: totalAmount + DELIVERY_FEE,
     shippingAddress
   });
 

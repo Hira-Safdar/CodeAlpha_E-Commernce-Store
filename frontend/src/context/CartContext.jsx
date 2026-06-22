@@ -50,17 +50,22 @@ export function CartProvider({ children }) {
             : item
         );
       }
-      return [...current, { product, quantity }];
+      return [...current, { product, quantity: Math.min(quantity, product.stock) }];
     });
   };
 
   const updateItem = async (productId, quantity) => {
+    const item = items.find((cartItem) => cartItem.product._id === productId);
+    const nextQuantity = Math.max(1, Math.min(Number(quantity) || 1, item?.product.stock || quantity));
+
     if (user) {
-      const { data } = await api.put("/cart/update", { productId, quantity });
+      const { data } = await api.put("/cart/update", { productId, quantity: nextQuantity });
       setItems(normalizeItems(data.products));
       return;
     }
-    setItems((current) => current.map((item) => (item.product._id === productId ? { ...item, quantity } : item)));
+    setItems((current) =>
+      current.map((item) => (item.product._id === productId ? { ...item, quantity: nextQuantity } : item))
+    );
   };
 
   const removeItem = async (productId) => {
@@ -73,11 +78,13 @@ export function CartProvider({ children }) {
   };
 
   const clearCart = () => setItems([]);
+  const getItemQuantity = (productId) =>
+    items.find((item) => item.product._id === productId || item.product._id?.toString() === productId)?.quantity || 0;
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const value = useMemo(
-    () => ({ items, loading, subtotal, totalItems, addItem, updateItem, removeItem, clearCart, fetchCart }),
+    () => ({ items, loading, subtotal, totalItems, addItem, updateItem, removeItem, clearCart, fetchCart, getItemQuantity }),
     [items, loading, subtotal, totalItems]
   );
 

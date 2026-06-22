@@ -15,7 +15,13 @@ const router = express.Router();
 const productValidation = [
   body("title").trim().notEmpty().withMessage("Title is required"),
   body("description").trim().notEmpty().withMessage("Description is required"),
-  body("image").isURL().withMessage("Image must be a valid URL"),
+  body("image")
+    .custom((value) => {
+      const isUrl = /^https?:\/\/.+/i.test(value);
+      const isBase64Image = /^data:image\/(png|jpe?g|webp);base64,/i.test(value);
+      return isUrl || isBase64Image;
+    })
+    .withMessage("Image must be a valid URL or uploaded image"),
   body("category").trim().notEmpty().withMessage("Category is required"),
   body("price").isFloat({ min: 0 }).withMessage("Price must be positive"),
   body("stock").isInt({ min: 0 }).withMessage("Stock cannot be negative")

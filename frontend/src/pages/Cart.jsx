@@ -1,11 +1,12 @@
 import { Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import QuantityControl from "../components/QuantityControl.jsx";
 import { useCart } from "../context/CartContext.jsx";
-import { formatCurrency } from "../utils/format.js";
+import { DELIVERY_FEE, formatCurrency } from "../utils/format.js";
 
 export default function Cart() {
   const { items, subtotal, updateItem, removeItem } = useCart();
-  const shipping = subtotal > 0 ? 12 : 0;
+  const shipping = subtotal > 0 ? DELIVERY_FEE : 0;
   const total = subtotal + shipping;
 
   return (
@@ -27,7 +28,12 @@ export default function Cart() {
                   <p className="text-sm text-slate-500">{formatCurrency(product.price)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <input className="input w-20" type="number" min="1" max={product.stock} value={quantity} onChange={(e) => updateItem(product._id, Number(e.target.value))} />
+                  <QuantityControl
+                    value={quantity}
+                    max={product.stock}
+                    onDecrease={() => (quantity === 1 ? removeItem(product._id) : updateItem(product._id, quantity - 1))}
+                    onIncrease={() => updateItem(product._id, quantity + 1)}
+                  />
                   <button className="btn-secondary h-10 w-10 p-0" onClick={() => removeItem(product._id)} aria-label="Remove item"><Trash2 size={17} /></button>
                 </div>
               </div>
